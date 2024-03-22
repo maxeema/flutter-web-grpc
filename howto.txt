@@ -1,0 +1,180 @@
+####
+#### How to setup & run on a localhost a Flutter Web app that utilizes gRPC.
+####
+
+# Requirements:
+Flutter 3.19.4
+Dart SDK version: 3.3.2 (stable)
+libprotoc 26.0
+Envoy 1.18.2
+
+# Let's start.
+
+cd flutter-web-grpc/
+
+>> install a "protoc" compiler
+see here https://protobuf.dev/getting-started/cpptutorial/#compiling-your-protocol-buffers
+I installed latest from https://github.com/protocolbuffers/protobuf/releases/tag/v26.0
+I extracted archive protoc-26.0-linux-x86_64.zip to $HOME
+
+>> updated PATH to make 'protoc' available in bash
+export PATH="$PATH:$HOME/protoc-26/bin"
+
+$ dart pub global activate protoc_plugin
+
+>> now define proto files in the "protos/" subfolder
+
+>> create a dest dir for compiled Dart protos
+mkdir -p shared/src/generated/protos
+
+$ protoc --dart_out=grpc:shared/src/generated/protos -Iprotos protos/*.proto
+
+#### Create Dart gRPC-server
+
+mkdir dart_server_grpc_demo
+cd dart_server_grpc_demo
+
+dart create -t cli . --force
+dart pub add async
+dart pub add grpc
+dart pub add protobuf
+
+mkdir -p lib/generated/protos/
+cp ../shared/src/generated/protos/* lib/generated/protos
+
+# create bin/server.dart with the content
+
+import 'package:grpc/grpc.dart';
+import 'package:dart_server_grpc_demo/generated/protos/hello.pbgrpc.dart';
+
+class GreeterService extends GreeterServiceBase {
+  @override
+  Future<HelloReply> sayHello(ServiceCall call, HelloRequest request) async {
+    return HelloReply()..message = 'Hello, ${request.name}!';
+  }
+
+  @override
+  Future<HelloReply> sayHelloAgain(ServiceCall call, HelloRequest request) async {
+    return HelloReply()..message = 'Hello again, ${request.name}!';
+  }
+}
+
+Future<void> main(List<String> args) async {
+  final server = Server.create(
+    services: [GreeterService()],
+    codecRegistry: CodecRegistry(codecs: const [GzipCodec(), IdentityCodec()]),
+  );
+  await server.serve(port: 50051);
+  print('Server listening on port ${server.port}...');
+}
+
+
+# run Dart cli-server with gRPC support
+$ dart bin/dart_server_grpc_demo.dart
+
+# create Dart grpc-client
+mkdir dart_client_grpc_demo
+cd dart_client_grpc_demo
+
+dart create -t cli . --force
+
+dart pub add grpc
+dart pub add protobuf
+
+mkdir -p lib/generated/protos/
+cp ../shared/src/generated/protos/* lib/generated/protos
+
+# create bin/dart_client_grpc_demo.dart with the content
+
+import 'package:grpc/grpc.dart';
+import 'package:dart_client_grpc_demo/generated/protos/hello.pbgrpc.dart';
+
+Future<void> main(List<String> args) async {
+  final channel = ClientChannel(
+    'localhost',
+    port: 50051,
+    options: ChannelOptions(
+      credentials: ChannelCredentials.insecure(),
+      codecRegistry:
+          CodecRegistry(codecs: const [GzipCodec(), IdentityCodec()]),
+    ),
+  );
+  final stub = GreeterClient(channel);
+
+  final name = args.isNotEmpty ? args[0] : 'world';
+
+  try {
+    final response = await stub.sayHello(
+      HelloRequest()..name = name,
+      options: CallOptions(compression: const GzipCodec()),
+    );
+    print('Greeter client received: ${response.message}');
+  } catch (e) {
+    print('Caught error: $e');
+  }
+  await channel.shutdown();
+}
+
+#### install Envoy proxy
+https://www.envoyproxy.io/docs/envoy/latest/start/install#install-envoy-on-ubuntu-linux
+
+# for the configuration see envoy.yaml at the root of the project
+
+# in this example Envoy listens on the 50052 port and proxys calls to 50051 where is ran Dart backend with gRPC support.
+
+# for instance, plain Dart cli-app (see bin/dart_client_grpc_demo.dart) will work well if calls and Envoy (port 50052) and Dart backend (port 50051).
+# but Flutter web app works only with Envoy (port 50052).
+
+# run Envoy
+envoy -c envoy.yaml
+
+#### Web demo grpc app
+
+mkdir flutter_web_client_grpc_demo_app
+flutter create .
+dart pub add grpc
+
+# add imports to lib/main.dart
+import 'package:grpc/grpc.dart';
+import 'package:grpc/grpc_or_grpcweb.dart';
+
+# copy protos
+mkdir lib/generated/protos
+cp ../shared/src/generated/protos/* lib/generated/protos
+
+# add import to lib/main.dart
+import 'package:flutter_web_client_grpc_demo_app/generated/protos/hello.pbgrpc.dart';
+
+# a grpc test call method, it should be called somewhere in lib/main.dart
+
+Future<String> callGrpc(List<String> args) async {
+  print('callGrpc()...');
+  final channel = GrpcOrGrpcWebClientChannel.toSingleEndpoint(
+    host:'localhost',
+//    port: 50051, // direct
+    port: 50052, // proxy
+    transportSecure: false,
+  );
+  final stub = GreeterClient(channel);
+  final name = args.isNotEmpty ? args.join(' ') : 'flutter';
+  try {
+    final response = await stub.sayHello(
+      HelloRequest()..name = name,
+      options: CallOptions(compression: const GzipCodec()),
+    );
+    print('Greeter client received: ${response.message}');
+    return response.message;
+  } catch (e) {
+    print('Caught error: $e');
+    return '$e';
+  } finally {
+    await channel.shutdown();
+  }
+}
+
+#### Run Flutter Web demo app to test gRPC works in Chrome
+flutter run -d chrome
+
+# click the "Refresh" button at the right bottom corner to call gRPC.
+
+That's all.
