@@ -5,8 +5,10 @@
 # Requirements:
 Flutter 3.19.4
 Dart SDK version: 3.3.2 (stable)
-libprotoc 26.0
 Envoy 1.18.2
+
+# Optial Requirements:
+libprotoc 26.0
 
 # Let's start.
 
@@ -175,6 +177,6 @@ Future<String> callGrpc(List<String> args) async {
 #### Run Flutter Web demo app to test gRPC works in Chrome
 flutter run -d chrome
 
-# click the "Refresh" button at the right bottom corner to call gRPC.
+# click the "Refresh" button at the right bottom corner to call gRPC and the result will appear at the center of the screen.
 
 That's all.
