@@ -7,29 +7,37 @@ Flutter 3.19.4
 Dart SDK version: 3.3.2 (stable)
 Envoy 1.18.2
 
-# Optial Requirements:
+# Optional Requirements:
 libprotoc 26.0
+
+# Proto sources
+located at the protos/ dir
+
+# Compiled protos
+located at shared/src/generated/protos/
 
 # Let's start.
 
 cd flutter-web-grpc/
 
->> install a "protoc" compiler
+# install a "protoc" compiler
 see here https://protobuf.dev/getting-started/cpptutorial/#compiling-your-protocol-buffers
 I installed latest from https://github.com/protocolbuffers/protobuf/releases/tag/v26.0
 I extracted archive protoc-26.0-linux-x86_64.zip to $HOME
 
->> updated PATH to make 'protoc' available in bash
+# updated PATH to make 'protoc' available in bash
 export PATH="$PATH:$HOME/protoc-26/bin"
 
 $ dart pub global activate protoc_plugin
 
->> now define proto files in the "protos/" subfolder
+# now define proto files in the "protos/" subfolder
+# we created a simple hello.proto with simple functionality
 
->> create a dest dir for compiled Dart protos
+# create a dest dir for compiled Dart protos
 mkdir -p shared/src/generated/protos
 
-$ protoc --dart_out=grpc:shared/src/generated/protos -Iprotos protos/*.proto
+# compile and copy protos binary to the corresponding project (see Makefile)
+$ make gen-protos
 
 #### Create Dart gRPC-server
 
