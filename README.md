@@ -12,6 +12,9 @@ We will use a proxy called Envoy, that makes gRPC calls work from Flutter Web ap
 Note: The samples work on localhost without authentication.
 So, instead of direct calls to a gRPC server we will communicate with it via Envoy like this: Flutter Web App - Envoy - gRPC server. For Flutter native, mobile or cli-Dart apps we don't need Envoy.
 
+<h3>About my Runtime - Linux</h3>
+This sample I wrote and tested on Ubuntu 20.04.4 LTS
+
 <h3>Requirements</h3>
 Flutter 3.19.4<br/>
 Dart SDK version: 3.3.2 (stable)<br/>
