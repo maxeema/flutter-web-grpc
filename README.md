@@ -26,8 +26,9 @@ Located at the "protos/" dir.
 ### Compiled protos
 Located at the "shared/src/generated/protos/" dir compiled by "protoc" (libprotoc 26.0).
 
-<h3>Run the gRPC server</h3>
-Will bind localhost:50051 (see envoy.yaml for the configuration)
+<h3>1. Run the gRPC server (in our sample it is a Dart gRPC server)</h3>
+
+It will bind localhost:50051 (see envoy.yaml for the configuration)
 
 > cd dart_server_grpc_demo/
 
@@ -35,18 +36,27 @@ Will bind localhost:50051 (see envoy.yaml for the configuration)
 
 > dart bin/dart_server_grpc_demo.dart
 
-<h3>Run Envoy (a proxy that makes gRPC Web calls work)</h3>
-Will bind localhost:50052 and communicate with gRPC server at localhost:50051 (see envoy.yaml for the configuration)
+<h3>2. Run Envoy (a proxy that makes gRPC Web calls work)</h3>
+
+It will bind localhost:50052 and communicate with gRPC server at localhost:50051 (see envoy.yaml for the configuration)
 
 > envoy -c envoy.yaml
-Click the "Refresh" button at the right bottom corner to call gRPC and the result will appear at the center of the screen.
 
-<h3>Run the web app</h3>
+<h3>3. Run the web app and ensure gRPC calls works</h3>
+
+Afer run, click "Refresh" button at the right bottom corner to call gRPC and the result will appear at the center of the screen.
+<br/><br/>
+You should see *Hello, flutter 1! after next click *Hello, flutter 2!*, etc.
+
+> cd flutter_web_client_grpc_demo_app/
 
 > flutter run -d chrome
 
 <h3>Run the cli Dart app (optionally)</h3>
-The cli Dart app works well with a direct gRPC server, as well as via Envoy
+
+The cli Dart app works well with a direct gRPC server, as well as via Envoy.
+<br/><br/>
+You should see the output: *Greeter client received: Hello, dart!*
 
 > cd dart_client_grpc_demo/
 
