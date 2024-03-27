@@ -1,3 +1,6 @@
+///
+/// Copyright 2024 (c) Max Shemetov, https://github.com/maxeema
+///
 import 'package:flutter/material.dart';
 
 import 'package:grpc/grpc.dart';
@@ -13,8 +16,8 @@ Future<String> callGrpc(List<String> args) async {
   print('callGrpc()...');
   final channel = GrpcOrGrpcWebClientChannel.toSingleEndpoint(
     host:'localhost',
-//    port: 50051, // direct
-    port: 50052, // proxy
+    port: 50051, // direct - doesn't work in the Flutter Web app
+//    port: 50052, // proxy - does work in the Flutter Web app
     transportSecure: false,
   );
   final stub = GreeterClient(channel);
@@ -87,20 +90,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
       body: Center(
@@ -110,7 +102,7 @@ class _MyHomePageState extends State<MyHomePage> {
             Container(
               margin: EdgeInsets.all(20),
               child: Text(
-                grpcResponse ?? 'Waiting for gRPC response',
+                grpcResponse ?? 'Waiting for gRPC response...',
               ),
             ),
           ],
@@ -120,7 +112,7 @@ class _MyHomePageState extends State<MyHomePage> {
         onPressed: _executeCallGrpc,
         tooltip: 'Increment',
         child: const Icon(Icons.refresh),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      ),
     );
   }
 }
