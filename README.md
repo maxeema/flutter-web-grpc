@@ -1,19 +1,22 @@
 # flutter-web-grpc sample
 
-<b>Flutter Web gRPC sample</b> (Dart gRPC-backend, Flutter Web front-end)
+<b>Flutter Web gRPC sample</b> (Dart gRPC-backend, Envoy proxy, Flutter Web front-end)
 
 <h3>Problem (still reproduces on Flutter 3.19.4)</h3>
-In Flutter Web app normal gRPC calls fails when interract directly with a gRPC server. To make it work we will use Envoy.
+In Flutter Web app normal gRPC calls fail when interract directly with a gRPC server: to make them work properly we will use the Envoy proxy.
 
 <h3>About the repo</h3>
 A sample of a Flutter Web app that utilizes the "grpc" packages from pub.dev.
-We will use a proxy called Envoy, that makes gRPC calls work from Flutter Web app.
+We will use a proxy called Envoy, that makes gRPC calls work from Flutter Web app.<br/><br/>
+Instead of direct calls to a gRPC server we will communicate with it through the Envoy proxy like this: Flutter Web App - Envoy proxy - gRPC server.<br/><br/>
+For Flutter native, mobile or Dart console apps we don't need using the Envoy proxy but can :) (I tested Dart command line app (dart_client_grpc_demo/) and Flutter native app (flutter_web_client_grpc_demo_app/) on Linux and they work properly with Envoy as well).
 <br/><br/>
-Note: The samples work on localhost without authentication.
-So, instead of direct calls to a gRPC server we will communicate with it via Envoy like this: Flutter Web App - Envoy - gRPC server. For Flutter native, mobile or Dart console apps we don't need Envoy.
 
-<h3>About my Runtime - Linux</h3>
-This repo and samples I wrote and tested on Ubuntu 20.04.4 LTS (see "howto.txt" for more details).
+Note: The repo has been by configuring and running on localhost (assuming that the gRPC service and the Envoy proxy are located on localhost).
+
+
+<h3>About the author's Runtime (Linux)</h3>
+This repo and samples have been written and tested on Ubuntu 20.04.4 LTS (see "howto.txt" for more details).
 
 <h3>Requirements</h3>
 Flutter 3.19.4<br/>
@@ -46,7 +49,7 @@ It will bind localhost:50052 and communicate with gRPC server at localhost:50051
 
 > envoy -c envoy.yaml
 
-<h3>3. Run the web app and ensure gRPC calls works</h3>
+<h3>3. Run the web app and ensure gRPC calls work properly through Envoy</h3>
 
 Afer run the Flutter app, click the "Refresh" button at the bottom right corner to call gRPC and the result will appear at the center of the screen.
 <br/><br/>
