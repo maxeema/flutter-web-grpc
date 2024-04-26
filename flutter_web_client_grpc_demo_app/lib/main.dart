@@ -2,44 +2,12 @@
 /// Copyright 2024 (c) Max Shemetov, https://github.com/maxeema
 ///
 import 'package:flutter/material.dart';
+import 'package:signals/signals_flutter.dart';
 
-import 'package:grpc/grpc.dart';
-import 'package:grpc/grpc_or_grpcweb.dart';
-
-import 'package:flutter_web_client_grpc_demo_app/generated/protos/hello.pbgrpc.dart';
+import 'data.dart';
 
 void main() {
   runApp(const MyApp());
-}
-
-Future<String> callGrpc(List<String> args) async {
-  print('callGrpc()...');
-  final channel = GrpcOrGrpcWebClientChannel.toSingleEndpoint(
-    host: 'localhost',
-    // A dedicated Envoy port for the web-grpc calls assuming that Envoy is ran
-    // according to the project's README.
-    port: 50052,
-    transportSecure: false,
-  );
-  final stub = GreeterClient(channel);
-  final name = args.isNotEmpty ? args.join(' ') : 'flutter';
-  try {
-    final response = await stub.sayHello(
-      HelloRequest()..name = name,
-      options: CallOptions(
-        // Note! If a server supports GzipCodec compression enable it here,
-        // but not all services support it, so you might remove/comment this.
-        compression: const GzipCodec(),
-      ),
-    );
-    print('Greeter client received: ${response.message}');
-    return response.message;
-  } catch (e) {
-    print('Caught error: $e');
-    return '$e';
-  } finally {
-    await channel.shutdown();
-  }
 }
 
 class MyApp extends StatelessWidget {
@@ -58,48 +26,28 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class MyHomePage extends StatefulWidget {
+class MyHomePage extends StatelessWidget {
   const MyHomePage({super.key, required this.title});
 
   final String title;
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  String? grpcResponse;
-  Object? key;
-
-  @override
-  void initState() {
-    super.initState();
-    Future.delayed(Duration(seconds: 1), () {
-      _executeCallGrpc();
-    });
-  }
-
-  _executeCallGrpc() {
-    _counter++;
-    key = Object();
-    final keyRef = key;
-    setState(() => grpcResponse = null);
-    callGrpc(['flutter', '$_counter']).then((response) async {
-      await Future.delayed(Duration(seconds: 1));
-      if (mounted && key == keyRef) {
-        setState(() => grpcResponse = response);
+  Widget build(BuildContext context) {
+    grpcData.listen(context, () {
+      if (grpcData.value.hasError && !grpcData.value.isLoading) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            const SnackBar(
+                content: Text('Please, ensure that grpc server is ran.\n'
+                    'It is located in the "dart_server_grpc_demo" folder.')),
+          );
       }
     });
-  }
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
+        title: Text(title),
       ),
       body: Center(
         child: Column(
@@ -107,16 +55,30 @@ class _MyHomePageState extends State<MyHomePage> {
           children: <Widget>[
             Container(
               margin: EdgeInsets.all(20),
-              child: Text(
-                grpcResponse ?? 'Waiting for gRPC response...',
-              ),
+              child: Watch((context) {
+                return grpcData.value.map(
+                  loading: () => const Text('Loading gRPC response...'),
+                  reloading: () => const Text('Reloading gRPC response...'),
+                  refreshing: () => const Text('Refreshing gRPC response...'),
+                  data: (data) => Text(
+                    'gRPC response: $data',
+                    textAlign: TextAlign.center,
+                  ),
+                  error: (error) {
+                    print('error, signalGrpcData.value: ${grpcData.value}');
+                    print(
+                        'error, signalGrpcData.previousValue: ${grpcData.previousValue}');
+                    return Text('Caught error! $error');
+                  },
+                );
+              }),
             ),
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _executeCallGrpc,
-        tooltip: 'Increment',
+        onPressed: grpcData.refresh,
+        tooltip: 'Refresh',
         child: const Icon(Icons.refresh),
       ),
     );

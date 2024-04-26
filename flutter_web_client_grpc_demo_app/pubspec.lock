@@ -251,6 +251,30 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.1.0"
+  signals:
+    dependency: "direct main"
+    description:
+      name: signals
+      sha256: "623a12333d53aeeaebeca83db2c7be04d09c46226d1bf9e3b5023fd1517399ed"
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.2.0"
+  signals_core:
+    dependency: transitive
+    description:
+      name: signals_core
+      sha256: e6d4940367e595c49fb93c1b918bfb03459d60ef7b7f9469befb5c236b6e20d0
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.1.0"
+  signals_flutter:
+    dependency: transitive
+    description:
+      name: signals_flutter
+      sha256: "74e78aa2da49984c32576817fc878f16feb6f1e57278898835659cc85a023f9f"
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.2.0"
   sky_engine:
     dependency: transitive
     description: flutter
@@ -338,3 +362,4 @@ packages:
     version: "0.5.1"
 sdks:
   dart: ">=3.3.2 <4.0.0"
+  flutter: ">=1.17.0"
