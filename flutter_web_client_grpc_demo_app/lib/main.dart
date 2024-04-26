@@ -15,9 +15,10 @@ void main() {
 Future<String> callGrpc(List<String> args) async {
   print('callGrpc()...');
   final channel = GrpcOrGrpcWebClientChannel.toSingleEndpoint(
-    host:'localhost',
-    port: 50051, // direct - doesn't work in the Flutter Web app
-//    port: 50052, // proxy - does work in the Flutter Web app
+    host: 'localhost',
+    // A dedicated Envoy port for the web-grpc calls assuming that Envoy is ran
+    // according to the project's README.
+    port: 50052,
     transportSecure: false,
   );
   final stub = GreeterClient(channel);
@@ -25,7 +26,11 @@ Future<String> callGrpc(List<String> args) async {
   try {
     final response = await stub.sayHello(
       HelloRequest()..name = name,
-      options: CallOptions(compression: const GzipCodec()),
+      options: CallOptions(
+        // Note! If a server supports GzipCodec compression enable it here,
+        // but not all services support it, so you might remove/comment this.
+        compression: const GzipCodec(),
+      ),
     );
     print('Greeter client received: ${response.message}');
     return response.message;
@@ -37,9 +42,9 @@ Future<String> callGrpc(List<String> args) async {
   }
 }
 
-
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -64,24 +69,25 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
-  
+
   String? grpcResponse;
   Object? key;
-  
+
   @override
   void initState() {
+    super.initState();
     Future.delayed(Duration(seconds: 1), () {
       _executeCallGrpc();
     });
   }
-  
+
   _executeCallGrpc() {
     _counter++;
     key = Object();
     final keyRef = key;
     setState(() => grpcResponse = null);
     callGrpc(['flutter', '$_counter']).then((response) async {
-      await Future.delayed(Duration(seconds:1));
+      await Future.delayed(Duration(seconds: 1));
       if (mounted && key == keyRef) {
         setState(() => grpcResponse = response);
       }
