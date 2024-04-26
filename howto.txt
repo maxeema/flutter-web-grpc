@@ -72,7 +72,7 @@ class GreeterService extends GreeterServiceBase {
 Future<void> main(List<String> args) async {
   final server = Server.create(
     services: [GreeterService()],
-    codecRegistry: CodecRegistry(codecs: const [GzipCodec(), IdentityCodec()]),
+    codecRegistry: CodecRegistry(codecs: const [GzipCodec()]),
   );
   await server.serve(port: 50051);
   print('Server listening on port ${server.port}...');
@@ -106,7 +106,7 @@ Future<void> main(List<String> args) async {
     options: ChannelOptions(
       credentials: ChannelCredentials.insecure(),
       codecRegistry:
-          CodecRegistry(codecs: const [GzipCodec(), IdentityCodec()]),
+          CodecRegistry(codecs: const [GzipCodec()]),
     ),
   );
   final stub = GreeterClient(channel);
